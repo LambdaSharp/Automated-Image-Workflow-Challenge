@@ -1,0 +1,70 @@
+Module: Fotostatur
+Version: 1.0
+Description: Photo/image rating and profile posting app
+
+Inputs:
+  
+#  - Parameter: TwitterConsumerKey
+#    Scope: ImageAnalyzer
+#    Default: TODO
+#    Type: Secret
+#    
+#  - Parameter: TwitterConsumerSecret
+#    Scope: ImageAnalyzer
+#    Default: TODO
+#    Type: Secret
+#    
+#  - Parameter: TwitterAccessToken
+#    Scope: ImageAnalyzer
+#    Default: TODO
+#    Type: Secret
+#    
+#  - Parameter: TwitterAccessSecret
+#    Scope: ImageAnalyzer
+#    Default: TODO
+#    Type: Secret
+    
+  - Parameter: HeadshotFileName
+    Scope: ImageAnalyzer
+    Default: TODO
+    Type: String
+
+Variables:
+
+  - Var: RekognitionPermission
+    Value: "*"
+    Resource:
+      Type: AWS::IAM::Role
+      Allow:
+      - rekognition:DetectLabels
+      - rekognition:DetectFaces
+      - rekognition:CompareFaces
+      - rekognition:DetectText
+
+  - Var: FotostaturPhotoBucket
+    Description: Where the photos will be stored
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+
+  - Var: HeadshotPhotos
+    Package: HeadshotPhotos
+    Files: Headshots
+    Prefix: headshots/
+    Bucket: FotostaturPhotoBucket
+    Scope: ImageAnalyzer
+    
+    # TODO: Clean S3 bucket on delete
+    
+Functions:
+
+  - Function: ImageAnalyzer
+    Description: Bucket to process the image
+    Memory: 128
+    Timeout: 120
+    Sources:
+    - S3: FotostaturPhotoBucket
+      Events:
+      - "s3:ObjectCreated:*"
+      Prefix: images/
+      Suffix: .jpg
